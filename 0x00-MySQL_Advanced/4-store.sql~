@@ -1,0 +1,8 @@
+-- creates a trigger that decreases the quantity of an item after adding a new order.
+DELIMITER $$
+CREATE TRIGGER drecrease_quantity BEFORE INSERT ON items FOR EACH ROW
+BEGIN
+IF NEW.Score < 0 THEN SET NEW.Score = 0;
+END IF;
+END $$
+DELIMITER ;
