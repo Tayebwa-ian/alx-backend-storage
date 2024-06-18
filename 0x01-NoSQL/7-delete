@@ -1,2 +1,2 @@
 // delete a document in the school collection
-db.school.deleteOne({"name": "Holberton school"})
+db.school.deleteMany({"name": "Holberton school"})
