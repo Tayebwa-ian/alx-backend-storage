@@ -23,6 +23,51 @@ def count_calls(method: Callable) -> Callable:
     return wrapper
 
 
+def call_history(method: Callable) -> Callable:
+    """
+    A decorator that stores the history of inputs
+    and outputs for a particular function
+    Arg:
+      method: the passed method
+    return: inner fuunction
+    """
+    @wraps(method)
+    def wrapper(*args, **kwargs) -> str:
+        """
+        create input and output list keys
+        """
+        list1 = method.__qualname__ + ":inputs"
+        list2 = method.__qualname__ + ":outputs"
+        args[0]._redis.rpush(list1, str(args[1]))
+        stored_data_key = method(*args, **kwargs)
+        args[0]._redis.rpush(list2, stored_data_key)
+        return stored_data_key
+    return wrapper
+
+
+def replay(method: Callable) -> None:
+    """
+    display the history of calls of a particular function
+    """
+    @wraps(method)
+    def wrapper(*args, **kwargs) -> None:
+        """
+        Display information
+        """
+        list1_name = method.__qualname__ + ":inputs"
+        list2_name = method.__qualname__ + ":ouputs"
+        result1 = args[0]._redis.lrange(list1_name, 0, -1)
+        result2 = args[0]._redis.lrange(list2_name, 0, -1)
+
+        gen_dict = dict(zip(result1, result2))
+        print(f"""
+        {method.__qualname__} was called {len(gen_dict.keys())} times:
+        """)
+        for key, value in gen_dict.items():
+            print(f"{method.__qualname__}(*({key},)) -> {value}")
+    return wrapper()
+
+
 class Cache:
     """Working with Redis Server"""
     def __init__(self):
@@ -31,6 +76,7 @@ class Cache:
         self._redis.flushdb()
 
     @count_calls
+    @call_history
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
         store input data into the redis sever
