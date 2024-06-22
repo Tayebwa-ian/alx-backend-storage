@@ -38,7 +38,8 @@ def call_history(method: Callable) -> Callable:
         """
         list1 = method.__qualname__ + ":inputs"
         list2 = method.__qualname__ + ":outputs"
-        self._redis.rpush(list1, str(args[0]))
+        input_data = f"(\'{args[0]}\',)"
+        self._redis.rpush(list1, input_data)
         stored_data_key = method(self, *args, **kwargs)
         self._redis.rpush(list2, stored_data_key)
         return stored_data_key
