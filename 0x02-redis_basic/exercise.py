@@ -14,12 +14,12 @@ def count_calls(method: Callable) -> Callable:
     return: inner fuunction
     """
     @wraps(method)
-    def wrapper(*args, **kwargs) -> str:
+    def wrapper(self, *args, **kwargs) -> str:
         """
         Increments the count by 1 everytime the class cache is called
         """
-        args[0]._redis.incr(method.__qualname__)
-        return method(*args, **kwargs)
+        self._redis.incr(method.__qualname__)
+        return method(self, *args, **kwargs)
     return wrapper
 
 
@@ -32,15 +32,15 @@ def call_history(method: Callable) -> Callable:
     return: inner fuunction
     """
     @wraps(method)
-    def wrapper(*args, **kwargs) -> str:
+    def wrapper(self, *args, **kwargs) -> str:
         """
         create input and output list keys
         """
         list1 = method.__qualname__ + ":inputs"
         list2 = method.__qualname__ + ":outputs"
-        args[0]._redis.rpush(list1, str(args[1]))
-        stored_data_key = method(*args, **kwargs)
-        args[0]._redis.rpush(list2, stored_data_key)
+        self._redis.rpush(list1, str(args[0]))
+        stored_data_key = method(self, *args, **kwargs)
+        self._redis.rpush(list2, stored_data_key)
         return stored_data_key
     return wrapper
 
